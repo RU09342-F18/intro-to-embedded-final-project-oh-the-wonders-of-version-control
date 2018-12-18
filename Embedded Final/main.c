@@ -1,10 +1,18 @@
 #include <msp430.h>
 
 // Variables for ADC12 to control servo
-int value = 0;
+int val = 0;
 int pos = 0;
 
-char data;
+//
+char input = 'a';
+
+int topic = 0;
+int value = 0;
+int counter = 0;
+
+char topicArray[5];
+char valueArray[5];
 
 void configurePWM() {
     P1DIR |= BIT4;                              // Sets P1.2 to the output direction
@@ -27,17 +35,27 @@ void configureADC12() {
 }
 
 void configureUART0() {
-    P1DIR |= BIT0;                              // Sets P1.0 LED to the output direction
-    P1OUT &= ~BIT0;                             // Initially clears P1.0 LED
     P3SEL |= BIT3 | BIT4;                       // P3.4 is connected to RX and P3.3 is connected to TX
     UCA0CTL1 = UCSWRST;                         // Enables software reset
     UCA0CTL1 = UCSSEL_2;                        // Sets SMCLK as the clock source
     UCA0BR0 = 8;                                // Sets the baud rate to 115200
     UCA0BR1 = 0;                                // Sets the baud rate to 115200
-    UCA0MCTL |= UCBRS_3 | UCBRF_0;              //
+    UCA0MCTL |= UCBRS_6 | UCBRF_0;              //
     UCA0CTL1 &= ~UCSWRST;                       // Disables software reset
     UCA0IE |= UCRXIE;                           // Enables RX based interrupts
     UCA0IE |= UCTXIE;                           // Enables TX based interrupts;
+}
+
+void configureUART1() {
+    P4SEL |= BIT4 | BIT5;                       // P4.5 is connected to RX and P4.4 is connected to TX
+    UCA1CTL1 = UCSWRST;                         // Enables software reset
+    UCA1CTL1 = UCSSEL_2;                        // Sets SMCLK as the clock source
+    UCA1BR0 = 8;                                // Sets the baud rate to 115200
+    UCA1BR1 = 0;                                // Sets the baud rate to 115200
+    UCA1MCTL |= UCBRS_6 | UCBRF_0;              //
+    UCA1CTL1 &= ~UCSWRST;                       // Disables software reset
+    UCA1IE |= UCRXIE;                           // Enables RX based interrupts
+    UCA1IE |= UCTXIE;                           // Enables TX based interrupts
 }
 
 int main(void)
@@ -46,6 +64,7 @@ int main(void)
     configurePWM();
     configureADC12();
     configureUART0();
+    //configureUART1();
 
      while (1) {
          ADC12CTL0 |= ADC12SC;                       // Start sampling and conversion of ADC12
@@ -57,8 +76,8 @@ int main(void)
 __interrupt void ADC12_ISR(void){
   switch(ADC12IV) {
   case  6:                                       // Vector 6:  ADC12IFG0
-      value = ADC12MEM0;
-      pos = (value / 4096.0) * 100;
+      val = ADC12MEM0;
+      pos = (val / 4096.0) * 100;
       TA0CCR3 = pos * 0.28 +23;
 
       __bic_SR_register_on_exit(LPM0_bits);      // Exit active CPU
@@ -75,8 +94,65 @@ __interrupt void UART0(void) {
         UCA0IFG &= ~UCTXIFG;                    // Clears the TX interrupt flag
         ADC12CTL0 |= ADC12SC;                   // Start sampling and conversion of ADC12
     } if (UCA0IFG & UCRXIFG){                   // If the RX interrupt flag is triggered
-        data = UCA0RXBUF;
+        input = UCA0RXBUF;
+        if (input == 10 || input == 13){
+            value = 1;
+            counter = 0;
+        } else if (input == ':' || input == ' ') {
+            topic = 1;
+            value = 0;
+            counter = 0;
+        } else if (input == '!') {
+            topic = 0;
+            value = 0;
+            counter = 0;
+        } else if (topic == 1 && value == 0) {
+            valueArray[counter] = input;
+            counter ++;
+        } else if (topic == 0 && value == 0) {
+            topicArray[counter] = input;
+            counter ++;
+        } else {
+            topic = 0;
+            value = 0;
+            counter = 0;
+        }
     }
-    P1OUT &= ~BIT0;                             // Turns off the P1.0 LED
 }
 
+/*
+// UART1 interrupt vector
+#pragma vector=USCI_A1_VECTOR
+__interrupt void UART1(void) {
+    if (UCA1IFG & UCTXIFG) {                    // If the TX interrupt flag is triggered
+        UCA1IFG &= ~UCTXIFG;                    // Clears the TX interrupt flag
+        ADC12CTL0 |= ADC12SC;                   // Start sampling and conversion of ADC12
+    } if (UCA1IFG & UCRXIFG){                   // If the RX interrupt flag is triggered
+        input = UCA1RXBUF;
+
+        if (input == 10 || input == 13){
+            value = 1;
+            counter = 0;
+        } else if (input == ':' || input == ' ') {
+            topic = 1;
+            value = 0;
+            counter = 0;
+        } else if (input == '!') {
+            topic = 0;
+            value = 0;
+            counter = 0;
+        } else if (topic == 1 && value == 0) {
+            valueArray[counter] = input;
+            counter ++;
+        } else if (topic == 0 && value == 0) {
+            topicArray[counter] = input;
+            counter ++;
+        } else {
+            topic = 0;
+            value = 0;
+            counter = 0;
+        }
+
+    }
+}
+*/
