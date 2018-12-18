@@ -17,8 +17,8 @@ const char* ssid = "Rowan_IoT";
 const char* password =  "";
 const char* mqtt_server = "172.24.137.95";
 const int mqttPort = 1883;
-const char* mqttUser = "Kosaricn4";
-const char* mqttPassword = "123321";
+const char* mqttUser = "";
+const char* mqttPassword = "";
 /* This is for CloudMQTT
 const char* mqtt_server = "m13.cloudmqtt.com";
 const int mqttPort = 18929;
