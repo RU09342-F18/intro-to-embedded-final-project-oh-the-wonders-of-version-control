@@ -11,8 +11,8 @@ int topic = 0;
 int value = 0;
 int counter = 0;
 
-char topicArray[5];
-char valueArray[5];
+char topicArray[8];
+char valueArray[3];
 
 void configurePWM() {
     P1DIR |= BIT4;                              // Sets P1.2 to the output direction
@@ -61,8 +61,8 @@ void configureUART1() {
 int main(void)
 {
     WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
-    configurePWM();
-    configureADC12();
+    //configurePWM();
+    //configureADC12();
     configureUART0();
     //configureUART1();
 
@@ -71,7 +71,7 @@ int main(void)
          __bis_SR_register(LPM0_bits + GIE);         // LPM0, ADC12_ISR will force exit
      }
 }
-
+/*
 #pragma vector = ADC12_VECTOR
 __interrupt void ADC12_ISR(void){
   switch(ADC12IV) {
@@ -85,7 +85,7 @@ __interrupt void ADC12_ISR(void){
   default: break;
   }
 }
-
+*/
 
 #pragma vector=USCI_A0_VECTOR
 __interrupt void UART0(void) {
@@ -100,22 +100,27 @@ __interrupt void UART0(void) {
             counter = 0;
         } else if (input == ':' || input == ' ') {
             topic = 1;
-            value = 0;
             counter = 0;
         } else if (input == '!') {
             topic = 0;
             value = 0;
             counter = 0;
-        } else if (topic == 1 && value == 0) {
+
+            int i = 0;
+
+            for (i = 0; i < 8; i++) {
+                topicArray[i] = 0;
+            }
+            for (i = 0; i < 3; i++) {
+                valueArray[i] = 0;
+            }
+
+        } else if (topic == 1) {
             valueArray[counter] = input;
             counter ++;
-        } else if (topic == 0 && value == 0) {
+        } else if (topic == 0) {
             topicArray[counter] = input;
             counter ++;
-        } else {
-            topic = 0;
-            value = 0;
-            counter = 0;
         }
     }
 }
