@@ -1,4 +1,5 @@
 #include <msp430.h>
+#include <stdio.h>
 
 // Variables for ADC12 to control servo
 int val = 0;
@@ -13,6 +14,16 @@ int counter = 0;
 
 char topicArray[8];
 char valueArray[3];
+
+int valueInt = 0;
+
+//
+int position = 0;
+int toggle = 0;
+int light = 0;
+char positionArray[] = {'P','o','s','i','t','i','o','n'};
+int toggleArray[] = {'T','o','g','g','l','e'};
+int lightArray[] = {'L','i','g','h','t'};
 
 void configurePWM() {
     P1DIR |= BIT4;                              // Sets P1.2 to the output direction
@@ -98,6 +109,8 @@ __interrupt void UART0(void) {
         if (input == 10 || input == 13){
             value = 1;
             counter = 0;
+
+            sscanf(valueArray, "%d", &valueInt);
         } else if (input == ':' || input == ' ') {
             topic = 1;
             counter = 0;
@@ -105,7 +118,7 @@ __interrupt void UART0(void) {
             topic = 0;
             value = 0;
             counter = 0;
-
+            /*
             int i = 0;
 
             for (i = 0; i < 8; i++) {
@@ -114,13 +127,13 @@ __interrupt void UART0(void) {
             for (i = 0; i < 3; i++) {
                 valueArray[i] = 0;
             }
-
+            */
         } else if (topic == 1) {
             valueArray[counter] = input;
             counter ++;
         } else if (topic == 0) {
             topicArray[counter] = input;
-            counter ++;
+            counter++;
         }
     }
 }
