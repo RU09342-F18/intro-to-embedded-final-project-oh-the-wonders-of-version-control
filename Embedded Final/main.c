@@ -56,11 +56,11 @@ void configureUART0() {
 }
 
 void configureInput() {
-    P1DIR &= ~BIT0;                             // Sets P1.1 in the input direction
-    P1IE |= BIT0;                               // P1.1 interrupt enabled
-    P1IES |= BIT0;                              // P1.1 interrupt flag is set with a high
+    P1DIR &= ~BIT0;                             // Sets P1.0 in the input direction
+    P1IE |= BIT0;                               // P1.0 interrupt enabled
+    P1IES |= BIT0;                              // P1.0 interrupt flag is set with a high
                                                 // to low transition
-    P1IFG &= ~BIT0;                             // P1.1 interrupt flag is cleared
+    P1IFG &= ~BIT0;                             // P1.0 interrupt flag is cleared
 }
 
 int main(void) {
